@@ -261,6 +261,260 @@ void removeCourse(ListNode*& head, const string& courseToRemove) {
         cout << "Course '" << courseToRemove << "' not found." << endl;
     }
 }
+class Teacher {
+private:
+    string teacherID;
+
+public:
+    string name;
+    string email;
+    ListNode* coursesTaught; 
+
+    // Constructor
+    Teacher() : coursesTaught(nullptr) {}
+
+   
+    ~Teacher() {
+        while (coursesTaught != nullptr) {
+            ListNode* temp = coursesTaught;
+            coursesTaught = coursesTaught->next;
+            delete temp;
+        }
+    }
+
+    void getInformation() {
+        cout << "^^^^^^^^^^^Teacher's information^^^^^^^^^^^^" << endl;
+        cout << "Enter Teacher ID: ";
+        cin.ignore();
+        getline(cin, teacherID);
+        cout << "Enter Teacher Name: ";
+        getline(cin, name);
+        cout << "Enter Teacher Email: ";
+        getline(cin, email);
+        cout << endl; // Add an extra newline for better formatting
+    }
+
+    void enrollCourse(const string& course) {
+        ListNode* newNode = new ListNode(course);
+        newNode->next = coursesTaught;
+        coursesTaught = newNode;
+    }
+
+    void assignCourses() {
+        // Define available courses
+        vector<string> courses = { "OOP", "Linear Algebra", "Discrete Structure", "ISE", "ECS", "OOP Lab", "Islamiyat" };
+
+        cout << "Available courses:\n";
+        for (int i = 0; i < courses.size(); ++i) {
+            cout << i + 1 << ". " << courses[i] << endl;
+        }
+
+        cout << "Enter the numbers corresponding to the courses you want to teach (Max 3): ";
+        int choice;
+        vector<int> selectedCourses; // Use vector to store selected course indices
+
+        for (int i = 0; i < 3; ++i) {
+            cin >> choice;
+            bool isValid = choice >= 1 && choice <= courses.size();
+            bool isUnique = true;
+
+        
+            if (!isValid) {
+                cout << "Invalid course number. Please enter a valid number between 1 and " << courses.size() << endl;
+                i--; 
+                continue;
+            }
+
+            // Check if choice is unique
+            for (int courseIndex : selectedCourses) {
+                if (courseIndex == choice) {
+                    isUnique = false;
+                    break;
+                }
+            }
+
+            if (isUnique) {
+                selectedCourses.push_back(choice); // Insert course index into vector
+            }
+            else {
+                cout << "Course already selected. Please enter a unique number." << endl;
+                i--; // Decrement i to allow the user to enter the number again
+            }
+        }
+
+        cin.ignore(); // clear input buffer
+
+        cout << "Courses assigned to " << name << " are: ";
+        for (int i = 0; i < selectedCourses.size(); ++i) {
+            cout << courses[selectedCourses[i] - 1];
+            if (i != selectedCourses.size() - 1) { // Check if not the last course
+                cout << ", ";
+            }
+            enrollCourse(courses[selectedCourses[i] - 1]); 
+        }
+        cout << endl;
+    }
+
+    void viewCourses(bool displayDetails = true) {
+        if (name.empty()) {
+            cout << "No courses assigned." << endl;
+            return;
+        }
+
+        if (displayDetails) {
+            cout << "Courses assigned to " << name << " are: " << endl;
+            ListNode* current = coursesTaught;
+            while (current != nullptr) {
+                cout << "Course: " << current->course << endl;
+                cout << "Teacher ID: " << teacherID << endl;
+                cout << "Teacher Name: " << name << endl;
+                cout << "Teacher Email: " << email << endl;
+                cout << "-----------------------------------------" << endl;
+                current = current->next;
+            }
+        }
+        else {
+            cout << "Courses assigned to " << name << " are: ";
+            ListNode* current = coursesTaught;
+            while (current != nullptr) {
+                cout << current->course;
+                if (current->next != nullptr) {
+                    cout << ", ";
+                }
+                current = current->next;
+            }
+            cout << endl;
+        }
+    }
+
+    // Function to remove courses assigned to the teacher
+    void removeTeacherCourse() {
+        if (coursesTaught == nullptr) {
+            cout << "No courses assigned to " << name << "." << endl;
+            return;
+        }
+
+        cout << "Courses removed for " << name << ":" << endl;
+        while (coursesTaught != nullptr) {
+            ListNode* temp = coursesTaught;
+            coursesTaught = coursesTaught->next;
+            cout << "Removed Course: " << temp->course << endl;
+            delete temp;
+        }
+    }
+
+    void saveToFile(const string& filename) {
+        ofstream file(filename);
+        if (file.is_open()) {
+            file << name << endl;
+            file << email << endl;
+            file << teacherID << endl;
+            ListNode* current = coursesTaught;
+            while (current != nullptr) {
+                file << current->course << endl;
+                current = current->next;
+            }
+            file.close();
+        }
+        else {
+            cout << "Unable to open file for writing." << endl;
+        }
+    }
+
+    // Function to load teacher information from a file
+    void loadFromFile(const string& filename) {
+        ifstream file(filename);
+        if (file.is_open()) {
+            string line;
+            getline(file, name);
+            getline(file, email);
+            getline(file, teacherID);
+            while (getline(file, line)) {
+                enrollCourse(line);
+            }
+            file.close();
+        }
+        else {
+            cout << "Unable to open file for reading." << endl;
+        }
+    }
+};
+class Course {
+private:
+    string courseCode;
+    string courseName;
+    Teacher teacher;
+    vector<Student*> studentsEnrolled; // Use a vector to store enrolled students
+
+public:
+    Course(string code, string name, Teacher t) : courseCode(code), courseName(name), teacher(t) {}
+
+    // You can add member functions for managing students enrolled, such as:
+    void addStudent(Student* s) {
+        studentsEnrolled.push_back(s);
+    }
+
+    void removeStudent(Student* s) {
+        for (auto it = studentsEnrolled.begin(); it != studentsEnrolled.end(); ++it) {
+            if (*it == s) {
+                studentsEnrolled.erase(it);
+                return;
+            }
+        }
+        cout << "Student not found in the enrolled list." << endl;
+    }
+
+    void viewStudents() {
+        if (studentsEnrolled.size() == 0) {
+            cout << "No students enrolled in this course." << endl;
+        }
+        else {
+            cout << "Enrolled Students:" << endl;
+            for (Student* s : studentsEnrolled) {
+                cout << s->name << endl;
+            }
+        }
+    }
+    // Function to save course information to a file
+    void saveToFile(const string& filename) {
+        ofstream file(filename);
+        if (file.is_open()) {
+            file << courseCode << endl;
+            file << courseName << endl;
+            
+            teacher.saveToFile(filename + "_teacher.txt");
+           
+            for (Student* s : studentsEnrolled) {
+                file << s->name << endl;
+            }
+            file.close();
+        }
+        else {
+            cout << "Unable to open file for writing." << endl;
+        }
+    }
+
+    // Function to load course information from a file
+    void loadFromFile(const string& filename) {
+        ifstream file(filename);
+        if (file.is_open()) {
+            getline(file, courseCode);
+            getline(file, courseName);
+            // Load teacher information
+            teacher.loadFromFile(filename + "_teacher.txt");
+            // Load enrolled student names
+            string studentName;
+            while (getline(file, studentName)) {
+                // Assuming Student objects are managed elsewhere
+                // Create Student objects using names and add them to studentsEnrolled vector
+            }
+            file.close();
+        }
+        else {
+            cout << "Unable to open file for reading." << endl;
+        }
+    }
+};
 int main() {
     cout << "--------------------------------------------------" << endl;
     cout << "         UNIVERSITY MANAGEMENT SYSTEM             " << endl;
@@ -310,6 +564,108 @@ int main() {
             }
         }
     }
+        else if (p == 2) {
+    Teacher teacher;
+    int choice;
+    bool continueLoop = true; // Flag to control the loop
+
+    while (continueLoop) { // Loop until the user chooses to exit
+        cout << "Select one from the following\n1. Enter Teacher Information\n2. Assign Courses\n3. View Courses\n4. Remove Courses\n5. Exit\n";
+        cin >> choice;
+
+        switch (choice) {
+        case 1:
+            teacher.getInformation();
+            cout << "--------------------------------------------------" << endl;
+            break;
+        case 2:
+            teacher.assignCourses();
+            cout << "--------------------------------------------------" << endl;
+            teacher.viewCourses(false); 
+            cout << "--------------------------------------------------" << endl;
+            break;
+        case 3:
+            teacher.viewCourses(); 
+            cout << "--------------------------------------------------" << endl;
+            break;
+        case 4:
+            teacher.removeTeacherCourse();
+            cout << "--------------------------------------------------" << endl;
+            teacher.viewCourses(); 
+            cout << "--------------------------------------------------" << endl;
+            break;
+        case 5:
+            continueLoop = false; // Exit the loop
+            break;
+        default:
+            cout << "Select a valid number." << endl;
+            break;
+        }
+    }
+}
+else if (p == 3) {
+
+    Teacher teacher;
+    teacher.getInformation(); // Assuming you want to get teacher information here
+
+  
+    Course course("CSE101", "Introduction to Computer Science", teacher);
+
+    int choice;
+    bool continueLoop = true; // Flag to control the loop
+
+    while (continueLoop) { 
+        cout << "Select one from the following:\n1. Add Student\n2. Remove Student\n3. View Enrolled Students\n4. Save Course Information\n5. Load Course Information\n6. Exit\n";
+        cin >> choice;
+
+        switch (choice) {
+        case 1: {
+            // Add student to the course
+            Student* newStudent = new Student();
+            newStudent->getID();
+            course.addStudent(newStudent);
+            cout << "Student added to the course." << endl;
+            break;
+        }
+        case 2: {
+            // Remove student from the course
+            string studentName;
+            cout << "Enter the name of the student you want to remove: ";
+            cin.ignore();
+            getline(cin, studentName);
+            break;
+        }
+        case 3:
+            // View enrolled students in the course
+            course.viewStudents();
+            break;
+        case 4: {
+            // Save course information to a file
+            string filename;
+            cout << "Enter the filename to save course information: ";
+            cin >> filename;
+            course.saveToFile(filename);
+            cout << "Course information saved successfully." << endl;
+            break;
+        }
+        case 5: {
+            // Load course information from a file
+            string filename;
+            cout << "Enter the filename to load course information: ";
+            cin >> filename;
+            course.loadFromFile(filename);
+            cout << "Course information loaded successfully." << endl;
+            break;
+        }
+        case 6:
+            continueLoop = false; // Exit the loop
+            break;
+        default:
+            cout << "Select a valid number." << endl;
+            break;
+        }
+    }
+}
     else if (p == 4) {
         cout << "Exiting program..." << endl;
         return 0; // Exit the program
